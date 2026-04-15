@@ -4,6 +4,7 @@ import { Card } from './ui/Card';
 
 const experiences = [
     {
+<<<<<<< HEAD
         role: "Software Developer Intern",
         company: "Nucelux Private Limited",
         period: "Mar 2026 - Present",
@@ -14,6 +15,12 @@ const experiences = [
         company: "Zidio Development",
         period: "Mar 2025 - Apr 2025",
         description: "Led front-end development of FinTrak, building intuitive React.js and Material UI components. Assisted in developing secure REST APIs using Spring Boot and MySQL with JWT-based authentication. Integrated analytics dashboards using Chart.js to improve usability and insights."
+=======
+        role: "Full-Stack Developer Intern",
+        company: "Zidio Development",
+        period: "Mar 2025 - Apr 2025",
+        description: "Led frontend development of FinTrak using React.js and Material UI. Assisted in developing secure REST APIs with Spring Boot and MySQL (JWT/OAuth2). Integrated real-time analytics dashboards."
+>>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
     },
     {
         role: "General Secretary",

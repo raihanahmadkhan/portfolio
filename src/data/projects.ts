@@ -38,6 +38,7 @@ export const projects: Project[] = [
         learnings: "Led front-end development building intuitive React components with Material UI. Assisted in developing secure REST APIs using Spring Boot with MySQL. Integrated real-time analytics dashboards using Chart.js."
     },
     {
+<<<<<<< HEAD
         slug: "route-optimizer",
         title: "Delivery Route Optimizer (CVRPTW)",
         description: "Advanced logistics optimization system solving the Capacitated Vehicle Routing Problem with Time Windows using multi-algorithm strategies including ACO, Genetic Algorithm, and PSO.",
@@ -61,6 +62,8 @@ export const projects: Project[] = [
         learnings: "Demonstrated how combining optimization algorithms with structured constraint handling can produce scalable, efficient, and real-world-ready solutions for logistics systems. Strengthened backend algorithmic implementation along with practical visualization and benchmarking capabilities."
     },
     {
+=======
+>>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
         slug: "stress-detector",
         title: "AI-Powered Student Stress Detector",
         description: "Full-stack stress analysis system implementing a Mamdani Fuzzy Inference Model. Features real-time visualizations with Chart.js and client-side inference fallback.",

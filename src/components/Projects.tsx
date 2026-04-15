@@ -8,7 +8,10 @@ import fintrakLogo from '../images/fintrak-logo.svg';
 import studentStressDetector from '../images/student-stress-detector.svg';
 import unibazaar from '../images/unibazaar.svg';
 import nile from '../images/nile.svg';
+<<<<<<< HEAD
 import routeOptimizer from '../images/route-optimizer.jpeg';
+=======
+>>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
 import { useRef } from 'react';
 
 const TiltCard = ({ children, className, onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) => {
@@ -71,8 +74,11 @@ export const Projects = () => {
                 return unibazaar;
             case 'nile-ecommerce':
                 return nile;
+<<<<<<< HEAD
             case 'route-optimizer':
                 return routeOptimizer;
+=======
+>>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
             default:
                 return null;
         }

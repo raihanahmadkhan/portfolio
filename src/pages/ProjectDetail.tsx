@@ -8,10 +8,7 @@ import fintrakLogo from '../images/fintrak-logo.svg';
 import studentStressDetector from '../images/student-stress-detector.svg';
 import unibazaar from '../images/unibazaar.svg';
 import nile from '../images/nile.svg';
-<<<<<<< HEAD
 import routeOptimizer from '../images/route-optimizer.jpeg';
-=======
->>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
 
 const getProjectImage = (slug: string) => {
     switch (slug) {
@@ -19,10 +16,7 @@ const getProjectImage = (slug: string) => {
         case 'stress-detector': return studentStressDetector;
         case 'unibazaar': return unibazaar;
         case 'nile-ecommerce': return nile;
-<<<<<<< HEAD
         case 'route-optimizer': return routeOptimizer;
-=======
->>>>>>> 0b76465fe9eef7003705f97780563ebb1a05c3f6
         default: return null;
     }
 };

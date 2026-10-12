@@ -1,15 +1,57 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/src/images/fav.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Raihan.Dev</title>
+  <title>Raihan Ahmad | Software Engineer</title>
+  <meta name="description" content="Raihan Ahmad is a final-year Computer Science student at BIT Mesra and Software Developer Intern at SkyGrid, working in Python, FastAPI, React and PostgreSQL." />
+  <meta name="author" content="Raihan Ahmad" />
+  <meta name="theme-color" content="#05338A" />
+  <link rel="canonical" href="https://ahmadraihan.netlify.app/" />
+  <link rel="icon" type="image/png" href="/src/images/fav.png" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Raihan Ahmad" />
+  <meta property="og:title" content="Raihan Ahmad | Software Engineer" />
+  <meta property="og:description" content="Final-year Computer Science student at BIT Mesra, building HRMS and payroll software at SkyGrid with Python, FastAPI and React." />
+  <meta property="og:url" content="https://ahmadraihan.netlify.app/" />
+  <meta property="og:image" content="https://ahmadraihan.netlify.app/og.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Raihan Ahmad, software engineer, over a blue sky and swimming pool illustration" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Raihan Ahmad | Software Engineer" />
+  <meta name="twitter:description" content="Final-year Computer Science student at BIT Mesra, building HRMS and payroll software at SkyGrid with Python, FastAPI and React." />
+  <meta name="twitter:image" content="https://ahmadraihan.netlify.app/og.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" />
+  <script>
+    try {
+      if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+    } catch (error) {
+      document.documentElement.classList.remove('dark');
+    }
+    if (location.pathname === '/' && !location.hash && performance.getEntriesByType('navigation')[0]?.type === 'navigate') {
+      document.documentElement.classList.add('boot-home');
+    }
+  </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Person",
+      "name": "Raihan Ahmad",
+      "url": "https://ahmadraihan.netlify.app/",
+      "jobTitle": "Software Engineer",
+      "alumniOf": { "@type": "CollegeOrUniversity", "name": "Birla Institute of Technology, Mesra" },
+      "sameAs": ["https://github.com/raihanahmadkhan", "https://linkedin.com/in/raihanahmadkhan"]
+    }
+  </script>
 </head>
 
 <body>
   <div id="root"></div>
+  <noscript>This site requires JavaScript. Contact Raihan Ahmad at raihanhzb@gmail.com.</noscript>
   <script type="module" src="/src/main.tsx"></script>
 </body>
 

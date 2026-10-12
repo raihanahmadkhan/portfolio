@@ -1,123 +1,132 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import { Home } from './pages/Home';
-import { ProjectDetail } from './pages/ProjectDetail';
+import { useEffect, useLayoutEffect, useRef, type MouseEvent } from 'react';
+import { BrowserRouter, Route, Routes, useLocation, useNavigationType, type Location, type NavigationType } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
-import { ScrollIndicator } from './components/ui/ScrollIndicator';
-import { useEffect, useState } from 'react';
-import { motion, AnimatePresence, useScroll } from 'framer-motion';
+import { ArrowUpIcon } from './components/ui/icons';
+import { useScrolledPast } from './hooks/useScrolledPast';
+import { Home } from './pages/Home';
+import { NotFound } from './pages/NotFound';
+import { ProjectDetail } from './pages/ProjectDetail';
 
-const ScrollToTop = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [pathname]);
-  return null;
+const SCROLL_STORAGE_KEY = 'scroll-positions';
+
+const restoredPositions = (): [string, number][] => {
+    const [entry] = performance.getEntriesByType('navigation') as PerformanceNavigationTiming[];
+    if (!entry || entry.type === 'navigate') return [];
+    try {
+        const saved: unknown = JSON.parse(sessionStorage.getItem(SCROLL_STORAGE_KEY) ?? '[]');
+        return Array.isArray(saved) ? saved : [];
+    } catch {
+        return [];
+    }
+};
+
+const scrollPositions = new Map<string, number>(restoredPositions());
+let lastLocation: Location | null = null;
+
+history.scrollRestoration = 'manual';
+
+const moveFocusTo = (element: HTMLElement | null) => {
+    if (!element) return;
+    if (!element.hasAttribute('tabindex')) element.setAttribute('tabindex', '-1');
+    element.focus({ preventScroll: true });
+};
+
+const PageScroll = ({ location, navigationType }: { location: Location; navigationType: NavigationType }) => {
+    const hasMounted = useRef(false);
+
+    useLayoutEffect(() => {
+        const isMount = !hasMounted.current;
+        hasMounted.current = true;
+        const saved = scrollPositions.get(location.key);
+        const target = location.hash ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+
+        if (lastLocation && lastLocation !== location) moveFocusTo(target ?? document.getElementById('main'));
+        lastLocation = location;
+
+        if (navigationType === 'POP' && saved !== undefined) {
+            window.scrollTo({ top: saved, behavior: 'instant' });
+        } else if (target) {
+            target.scrollIntoView({ behavior: isMount ? 'instant' : 'auto' });
+            if (isMount) {
+                const landedAt = window.scrollY;
+                void document.fonts.ready.then(() => {
+                    if (Math.abs(window.scrollY - landedAt) < 4) target.scrollIntoView({ behavior: 'instant' });
+                });
+            }
+        } else if (isMount) {
+            window.scrollTo({ top: 0, behavior: 'instant' });
+        }
+
+        return () => {
+            scrollPositions.set(location.key, window.scrollY);
+        };
+    }, [location, navigationType]);
+
+    return null;
 };
 
 const BackToTop = () => {
-  const [isVisible, setIsVisible] = useState(false);
-  const { scrollY } = useScroll();
+    const isVisible = useScrolledPast(600);
 
-  useEffect(() => {
-    return scrollY.on("change", (latest) => {
-      setIsVisible(latest > 500);
-    });
-  }, [scrollY]);
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: 20 }}
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-50 p-3 rounded-full bg-theme-card border border-theme hover:border-theme-accent text-theme-secondary hover:text-theme-accent shadow-lg transition-colors duration-300"
-          aria-label="Back to top"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.95 }}
+    return (
+        <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0 })}
+            aria-label="Back to top"
+            className={`fixed bottom-6 right-6 z-50 flex h-11 w-11 items-center justify-center rounded-full border border-theme bg-theme-card text-theme-secondary shadow-lg transition-[opacity,visibility,color,border-color] duration-200 hover:border-theme-accent hover:text-theme-accent ${isVisible ? '' : 'invisible opacity-0'}`}
         >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 15l-6-6-6 6" />
-          </svg>
-        </motion.button>
-      )}
-    </AnimatePresence>
-  );
+            <ArrowUpIcon />
+        </button>
+    );
 };
 
-const PageTransition = ({ children }: { children: React.ReactNode }) => {
-  const location = useLocation();
-  return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
-  );
+const Shell = () => {
+    const location = useLocation();
+    const navigationType = useNavigationType();
+
+    useEffect(() => {
+        const save = () => {
+            scrollPositions.set(location.key, window.scrollY);
+            try {
+                sessionStorage.setItem(SCROLL_STORAGE_KEY, JSON.stringify([...scrollPositions].slice(-50)));
+            } catch {
+                return;
+            }
+        };
+        window.addEventListener('pagehide', save);
+        return () => window.removeEventListener('pagehide', save);
+    }, [location.key]);
+
+    const skipToContent = (event: MouseEvent) => {
+        event.preventDefault();
+        const main = document.getElementById('main');
+        moveFocusTo(main);
+        main?.scrollIntoView();
+    };
+
+    return (
+        <>
+            <a href="#main" onClick={skipToContent} className="skip-link">
+                Skip to content
+            </a>
+            <Navbar />
+            <div key={location.pathname} id="page" className="flex min-h-svh flex-col">
+                <PageScroll location={location} navigationType={navigationType} />
+                <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/project/:slug" element={<ProjectDetail />} />
+                    <Route path="*" element={<NotFound />} />
+                </Routes>
+            </div>
+            <BackToTop />
+        </>
+    );
 };
 
-const InitialLoadAnimation = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-    >
-      {children}
-    </motion.div>
-  );
-};
-
-const AppContent = () => {
-  const location = useLocation();
-
-  return (
-    <>
-      <ScrollToTop />
-      <Navbar />
-      <BackToTop />
-      {location.pathname === '/' && <ScrollIndicator />}
-      <main className="bg-theme-main min-h-screen text-theme-main selection:bg-accent selection:text-bg-main font-body transition-colors duration-500">
-        <PageTransition>
-          <Routes location={location}>
-            <Route path="/" element={<Home />} />
-            <Route path="/project/:slug" element={<ProjectDetail />} />
-          </Routes>
-        </PageTransition>
-      </main>
-    </>
-  );
-};
-
-const App = () => {
-  return (
-    <InitialLoadAnimation>
-      <Router>
-        <AppContent />
-      </Router>
-    </InitialLoadAnimation>
-  );
-};
+const App = () => (
+    <BrowserRouter>
+        <Shell />
+    </BrowserRouter>
+);
 
 export default App;

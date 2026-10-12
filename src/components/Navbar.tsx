@@ -1,213 +1,172 @@
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
-import { useTheme } from '../hooks/useTheme';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-
-const navLinks = [
-    { name: 'About', href: '#about' },
-    { name: 'Experience', href: '#experience' },
-    { name: 'Projects', href: '#projects' },
-    { name: 'Contact', href: '#contact' },
-];
+import { navLinks, site } from '../data/site';
+import { useActiveSection } from '../hooks/useActiveSection';
+import { useScrolledPast } from '../hooks/useScrolledPast';
+import { useTheme } from '../hooks/useTheme';
+import { DownloadIcon, MoonIcon, SunIcon } from './ui/icons';
 
 export const Navbar = () => {
     const { theme, toggleTheme } = useTheme();
     const location = useLocation();
-    const [isScrolled, setIsScrolled] = useState(false);
-    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-    const { scrollY } = useScroll();
+    const isHome = location.pathname === '/';
+    const activeSection = useActiveSection(isHome);
+    const isScrolled = useScrolledPast(24);
+    const [menuOpenAt, setMenuOpenAt] = useState<string | null>(null);
+    const isMenuOpen = menuOpenAt === location.key;
+    const menuButtonRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
 
-    useMotionValueEvent(scrollY, "change", (latest) => {
-        setIsScrolled(latest > 50);
-    });
+    useEffect(() => {
+        if (!isMenuOpen) return;
+        const page = document.getElementById('page');
+        const desktop = window.matchMedia('(min-width: 768px)');
+        const close = () => setMenuOpenAt(null);
+        const onKeyDown = (event: KeyboardEvent) => {
+            if (event.key !== 'Escape') return;
+            close();
+            menuButtonRef.current?.focus();
+        };
 
-    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
-        setIsMobileMenuOpen(false);
-        if (location.pathname === '/') {
-            e.preventDefault();
-            const element = document.querySelector(href);
-            element?.scrollIntoView({ behavior: 'smooth' });
-        }
-    };
+        document.documentElement.style.overflow = 'hidden';
+        page?.setAttribute('inert', '');
+        menuRef.current?.querySelector('a')?.focus();
+        window.addEventListener('keydown', onKeyDown);
+        desktop.addEventListener('change', close);
+        return () => {
+            document.documentElement.style.overflow = '';
+            page?.removeAttribute('inert');
+            window.removeEventListener('keydown', onKeyDown);
+            desktop.removeEventListener('change', close);
+        };
+    }, [isMenuOpen]);
 
-    const scrollToTop = (e: React.MouseEvent) => {
-        setIsMobileMenuOpen(false);
-        if (location.pathname === '/') {
-            e.preventDefault();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+    const current = isHome ? activeSection : location.pathname.startsWith('/project/') ? 'projects' : null;
+    const isSolid = isScrolled && !isMenuOpen;
+    const isOnSky = isHome && !isScrolled && !isMenuOpen;
+    const closeMenu = () => setMenuOpenAt(null);
+
+    const goToTop = () => {
+        closeMenu();
+        if (isHome) window.scrollTo({ top: 0 });
     };
 
     return (
-        <>
-            <motion.nav
-                initial={{ y: -100, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ duration: 0.6, ease: 'easeOut' }}
-                className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-300 ${isScrolled
-                    ? 'bg-theme-card/90 backdrop-blur-lg shadow-lg border-b border-theme'
-                    : 'bg-transparent'
+        <header>
+            <nav
+                aria-label="Primary"
+                className={`fixed inset-x-0 top-0 z-[100] border-b transition-[background-color,border-color,box-shadow] duration-200 ${isSolid
+                    ? 'border-theme bg-theme-card shadow-lg'
+                    : `border-transparent ${isOnSky ? 'nav-on-sky' : ''}`
                     }`}
             >
-                <div className="container mx-auto px-6 py-4">
-                    <div className="flex items-center justify-between">
-                        <Link
-                            to="/"
-                            onClick={scrollToTop}
-                            className="group"
-                        >
-                            <motion.span
-                                className="font-heading text-xl font-semibold tracking-wide text-theme-heading transition-colors"
-                                whileHover={{ scale: 1.02 }}
-                            >
-                                <span className="text-theme-accent">R</span>aihan
-                                <span className="text-theme-muted font-light ml-1 opacity-70 group-hover:opacity-100 transition-opacity">
-                                    .dev
-                                </span>
-                            </motion.span>
-                        </Link>
+                <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+                    <Link
+                        to="/"
+                        onClick={goToTop}
+                        aria-label={`${site.name}, home`}
+                        className="font-heading text-xl font-bold tracking-wide text-theme-heading transition-colors duration-200"
+                    >
+                        <span className="text-theme-accent transition-colors duration-200">R</span>aihan
+                        <span className="ml-1 font-medium text-theme-muted transition-colors duration-200">.dev</span>
+                    </Link>
 
-                        <div className="flex items-center gap-8">
-                            <ul className="hidden md:flex items-center gap-6">
-                                {navLinks.map((link) => (
-                                    <li key={link.name}>
-                                        <a
-                                            href={location.pathname === '/' ? link.href : `/${link.href}`}
-                                            onClick={(e) => handleNavClick(e, link.href)}
-                                            className="text-sm font-medium text-theme-secondary hover:text-theme-heading transition-colors duration-200 tracking-wide relative group"
+                    <div className="flex items-center gap-1 md:gap-4">
+                        <ul className="hidden items-center md:flex">
+                            {navLinks.map(link => {
+                                const isCurrent = current === link.id;
+                                return (
+                                    <li key={link.id}>
+                                        <Link
+                                            to={`/#${link.id}`}
+                                            aria-current={isCurrent ? 'location' : undefined}
+                                            className={`relative block px-3 py-2 font-heading text-sm font-bold tracking-wide transition-colors duration-200 after:absolute after:inset-x-3 after:bottom-1 after:h-0.5 after:origin-left after:bg-theme-accent after:transition-transform after:duration-200 ${isCurrent
+                                                ? 'text-theme-heading after:scale-x-100'
+                                                : 'text-theme-secondary after:scale-x-0 hover:text-theme-heading hover:after:scale-x-100'
+                                                }`}
                                         >
-                                            {link.name}
-                                            <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-theme-accent transition-all duration-300 group-hover:w-full" />
-                                        </a>
+                                            {link.label}
+                                        </Link>
                                     </li>
-                                ))}
-                            </ul>
+                                );
+                            })}
+                        </ul>
 
-                            <div className="hidden md:block w-px h-5 bg-theme opacity-30" />
+                        <a
+                            href={site.resume}
+                            download={site.resumeFilename}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hidden items-center gap-1.5 rounded-full border border-theme-accent/60 px-4 py-1.5 font-heading text-xs font-bold uppercase tracking-widest text-theme-accent transition-colors duration-200 hover:bg-theme-accent hover:text-theme-on-accent sm:inline-flex"
+                        >
+                            Resume
+                            <DownloadIcon width={14} height={14} />
+                        </a>
 
-                            <div className="flex items-center gap-3">
-                                <a
-                                    href="/resume.pdf"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="hidden sm:block px-4 py-1.5 text-xs font-medium font-heading text-theme-accent border border-theme-accent/40 rounded-full hover:bg-theme-accent hover:text-theme-main transition-all duration-300 tracking-widest uppercase"
-                                >
-                                    Resume
-                                </a>
+                        <button
+                            type="button"
+                            onClick={toggleTheme}
+                            aria-label={theme === 'dark' ? 'Switch to day theme' : 'Switch to dusk theme'}
+                            className="flex h-11 w-11 items-center justify-center rounded-full text-theme-heading transition-colors duration-200 hover:bg-theme-accent/15"
+                        >
+                            {theme === 'dark' ? <SunIcon width={18} height={18} /> : <MoonIcon width={18} height={18} />}
+                        </button>
 
-                                <button
-                                    onClick={toggleTheme}
-                                    className="p-2 rounded-full hover:bg-theme-main/20 transition-all duration-200 text-theme-heading hover:scale-110"
-                                    aria-label="Toggle Theme"
-                                >
-                                    <motion.div
-                                        initial={false}
-                                        animate={{ rotate: theme === 'dark' ? 0 : 180 }}
-                                        transition={{ duration: 0.3 }}
-                                    >
-                                        {theme === 'dark' ? (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <circle cx="12" cy="12" r="5"></circle>
-                                                <line x1="12" y1="1" x2="12" y2="3"></line>
-                                                <line x1="12" y1="21" x2="12" y2="23"></line>
-                                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                                                <line x1="1" y1="12" x2="3" y2="12"></line>
-                                                <line x1="21" y1="12" x2="23" y2="12"></line>
-                                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                                            </svg>
-                                        ) : (
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                                            </svg>
-                                        )}
-                                    </motion.div>
-                                </button>
-
-                                <button
-                                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                                    className="md:hidden p-2 rounded-lg hover:bg-theme-main/20 transition-all duration-200 text-theme-heading"
-                                    aria-label="Toggle Menu"
-                                >
-                                    <motion.div
-                                        animate={isMobileMenuOpen ? "open" : "closed"}
-                                        className="w-5 h-4 flex flex-col justify-between"
-                                    >
-                                        <motion.span
-                                            className="w-full h-0.5 bg-current block origin-left"
-                                            variants={{
-                                                closed: { rotate: 0, y: 0 },
-                                                open: { rotate: 45, y: -2 }
-                                            }}
-                                        />
-                                        <motion.span
-                                            className="w-full h-0.5 bg-current block"
-                                            variants={{
-                                                closed: { opacity: 1 },
-                                                open: { opacity: 0 }
-                                            }}
-                                        />
-                                        <motion.span
-                                            className="w-full h-0.5 bg-current block origin-left"
-                                            variants={{
-                                                closed: { rotate: 0, y: 0 },
-                                                open: { rotate: -45, y: 2 }
-                                            }}
-                                        />
-                                    </motion.div>
-                                </button>
-                            </div>
-                        </div>
+                        <button
+                            ref={menuButtonRef}
+                            type="button"
+                            onClick={() => setMenuOpenAt(isMenuOpen ? null : location.key)}
+                            aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                            aria-expanded={isMenuOpen}
+                            aria-controls="mobile-menu"
+                            className="flex h-11 w-11 items-center justify-center rounded-full text-theme-heading transition-colors duration-200 hover:bg-theme-accent/15 md:hidden"
+                        >
+                            <span aria-hidden="true" className="relative block h-4 w-5">
+                                <span className={`absolute left-0 h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? 'top-1/2 -translate-y-1/2 rotate-45' : 'top-0'}`} />
+                                <span className={`absolute left-0 top-1/2 h-0.5 w-full -translate-y-1/2 bg-current ${isMenuOpen ? 'opacity-0' : ''}`} />
+                                <span className={`absolute left-0 h-0.5 w-full bg-current transition-transform duration-200 ${isMenuOpen ? 'top-1/2 -translate-y-1/2 -rotate-45' : 'top-full -translate-y-full'}`} />
+                            </span>
+                        </button>
                     </div>
                 </div>
-            </motion.nav>
+            </nav>
 
-            <AnimatePresence>
-                {isMobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-theme-main/95 backdrop-blur-lg z-[99] md:hidden"
-                        onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ delay: 0.1 }}
-                            className="flex flex-col items-center justify-center h-full gap-8"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            {navLinks.map((link, index) => (
-                                <motion.a
-                                    key={link.name}
-                                    href={location.pathname === '/' ? link.href : `/${link.href}`}
-                                    onClick={(e) => handleNavClick(e, link.href)}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 + index * 0.1 }}
-                                    className="text-2xl font-heading font-medium text-theme-secondary hover:text-theme-heading transition-colors"
+            {isMenuOpen && (
+                <div
+                    ref={menuRef}
+                    id="mobile-menu"
+                    onClick={closeMenu}
+                    className="fixed inset-0 z-[99] animate-fade-in overflow-y-auto overscroll-contain bg-theme-main md:hidden"
+                >
+                    <ul className="flex min-h-full flex-col items-center justify-center gap-2 px-6 py-24">
+                        {navLinks.map(link => (
+                            <li key={link.id}>
+                                <Link
+                                    to={`/#${link.id}`}
+                                    onClick={closeMenu}
+                                    aria-current={current === link.id ? 'location' : undefined}
+                                    className={`block px-6 py-3 font-heading text-2xl font-bold transition-colors hover:text-theme-heading ${current === link.id ? 'text-theme-heading' : 'text-theme-secondary'}`}
                                 >
-                                    {link.name}
-                                </motion.a>
-                            ))}
-                            <motion.a
-                                href="/resume.pdf"
+                                    {link.label}
+                                </Link>
+                            </li>
+                        ))}
+                        <li className="mt-6">
+                            <a
+                                href={site.resume}
+                                download={site.resumeFilename}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.5 }}
-                                className="mt-4 px-6 py-2 text-sm font-medium font-heading text-theme-accent border border-theme-accent/40 rounded-full hover:bg-theme-accent hover:text-theme-main transition-all duration-300 tracking-widest uppercase"
+                                onClick={closeMenu}
+                                className="btn btn-outline btn-md"
                             >
-                                View Resume
-                            </motion.a>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+                                Resume
+                                <DownloadIcon width={16} height={16} />
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            )}
+        </header>
     );
 };

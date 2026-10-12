@@ -1,28 +1,15 @@
-import { useEffect } from 'react';
-import { Hero } from '../components/Hero';
 import { About } from '../components/About';
-import { Experience } from '../components/Experience';
-import { Projects } from '../components/Projects';
 import { Competitive } from '../components/Competitive';
-import { Extracurricular } from '../components/Extracurricular';
 import { Contact } from '../components/Contact';
+import { Experience } from '../components/Experience';
+import { Extracurricular } from '../components/Extracurricular';
+import { Footer } from '../components/Footer';
+import { Hero } from '../components/Hero';
+import { Projects } from '../components/Projects';
 
-export const Home = () => {
-    useEffect(() => {
-        const scrollTarget = sessionStorage.getItem('scrollToSection');
-        if (scrollTarget) {
-            sessionStorage.removeItem('scrollToSection');
-            setTimeout(() => {
-                const section = document.getElementById(scrollTarget);
-                if (section) {
-                    section.scrollIntoView({ behavior: 'smooth' });
-                }
-            }, 100);
-        }
-    }, []);
-
-    return (
-        <>
+export const Home = () => (
+    <>
+        <main id="main" className="flex-1">
             <Hero />
             <About />
             <Experience />
@@ -30,6 +17,7 @@ export const Home = () => {
             <Competitive />
             <Extracurricular />
             <Contact />
-        </>
-    );
-};
+        </main>
+        <Footer />
+    </>
+);
